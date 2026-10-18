@@ -12,8 +12,37 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import warnings, os, time, math
+import base64
+import mimetypes
 
 warnings.filterwarnings("ignore")
+
+
+def display_embedded_image(image_path, caption=None):
+    """Display an image as a Base64 data URI, bypassing Streamlit's media endpoint."""
+    if not os.path.isfile(image_path):
+        st.warning(f"Image not found: {image_path}")
+        return
+
+    mime_type = mimetypes.guess_type(image_path)[0] or "image/png"
+
+    with open(image_path, "rb") as image_file:
+        encoded_image = base64.b64encode(image_file.read()).decode("ascii")
+
+    st.markdown(
+        f"""
+        <img
+            src="data:{mime_type};base64,{encoded_image}"
+            style="width:100%; height:auto;"
+            alt="Scientific visualization"
+        />
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if caption:
+        st.caption(caption)
+
 
 # ─────────────────────────────────────────────────────────────────
 # PAGE CONFIG  (must be first Streamlit call)
@@ -1209,7 +1238,7 @@ elif page == "Performance":
         image_path = os.path.join(APP_DIR, rel_path)
         with col:
             if os.path.isfile(image_path):
-                st.image(image_path, caption=caption, use_container_width=True)
+                display_embedded_image(image_path, caption)
             else:
                 st.warning(f"Performance chart not found: {rel_path}")
 
