@@ -1,7 +1,7 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║          EXOPLANET DETECTION AI  —  Streamlit Web App           ║
-║          1D-CNN on Kepler Light Curves  |  Week 10A             ║
+║          EXO HUNTER AI  —  Streamlit Web App           ║
+║          1D-CNN on Kepler Light Curves             ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 # PAGE CONFIG  (must be first Streamlit call)
 # ─────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="ExoPlanet AI | Kepler CNN Detector",
+    page_title="Exo Hunter AI | Exoplanet Transit Detection",
     page_icon="🪐",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -575,10 +575,10 @@ with st.sidebar:
     <div style='text-align:center; padding:1.2rem 0 .5rem;'>
       <div style='font-family:Orbitron,monospace; font-size:1.1rem;
                   font-weight:900; color:#2575fc; letter-spacing:.12em;'>
-        🪐 EXOPLANET AI
+        🪐 EXO HUNTER AI
       </div>
       <div style='font-size:.65rem; letter-spacing:.15em; color:#2d4d6e; margin-top:.3rem;'>
-        KEPLER · 1D-CNN · WEEK 10
+        KEPLER · 1D-CNN · TRANSIT DETECTION
       </div>
     </div>
     <hr style='border-color:#0d2240; margin:.5rem 0 1rem;'>
@@ -592,7 +592,7 @@ with st.sidebar:
     st.markdown("<hr style='border-color:#0d2240; margin:1rem 0;'>", unsafe_allow_html=True)
     st.markdown("""
     <div style='font-size:.7rem; color:#2d4d6e; line-height:1.8;'>
-      Model: <span style='color:#4a80b0'>CNN Week 6</span><br>
+      Model: <span style='color:#4a80b0'>1D CNN</span><br>
       Threshold: <span style='color:#4a80b0'>0.6914</span><br>
       AUC: <span style='color:#4a80b0'>0.9628</span><br>
       EB Filter: <span style='color:#4a80b0'>Active</span>
@@ -615,7 +615,7 @@ if page == "Home":
       <h1 style='font-size:clamp(2rem,5vw,3.5rem); font-weight:900; margin:0;
                  background:linear-gradient(135deg,#ffffff,#7ab3ff,#6a11cb);
                  -webkit-background-clip:text; -webkit-text-fill-color:transparent;'>
-        EXOPLANET DETECTION AI
+        EXO HUNTER AI
       </h1>
       <div style='font-family:"DM Sans",sans-serif; font-size:1.1rem; color:#5a7fa8;
                   margin-top:1rem; max-width:640px; margin-left:auto; margin-right:auto;'>
@@ -628,10 +628,10 @@ if page == "Home":
     # ── Key Stats ──
     c1, c2, c3, c4 = st.columns(4)
     stats = [
-        ("0.9628", "Competition AUC"),
-        ("93%",    "Hot Jupiter Detection"),
-        ("100%",   "EB Rejection Rate"),
-        ("0.6914", "Calibrated Threshold"),
+        ("0.9628", "Benchmark ROC-AUC"),
+        ("0.6933", "Wild-data ROC-AUC"),
+        ("0.6914", "Decision Threshold"),
+        ("0%",     "Broader-catalog detection*"),
     ]
     for col, (val, label) in zip([c1,c2,c3,c4], stats):
         col.markdown(f"""
@@ -640,6 +640,7 @@ if page == "Home":
           <div class='metric-label'>{label}</div>
         </div>""", unsafe_allow_html=True)
 
+    st.caption("*The saved broader-catalog evaluation reported 0% detection on its tested sample; this is an important limitation, not a universal estimate for all catalogs.")
     st.markdown("<div style='height:2.5rem'></div>", unsafe_allow_html=True)
 
     # ── How It Works ──
@@ -651,7 +652,7 @@ if page == "Home":
     s1, s2, s3 = st.columns(3)
     steps = [
         ("01", "📥 Acquire", "Enter a Kepler Input Catalogue (KIC) number. The app auto-downloads the PDCSAP flux light curve — up to 8 quarters — from the MAST archive via <em>lightkurve</em>."),
-        ("02", "⚙️ Preprocess", "The Week 2 pipeline runs: NaN interpolation → median subtraction → best-variance 3,197-cadence segment → L2 normalisation → Gaussian smoothing (σ=10)."),
+        ("02", "⚙️ Preprocess", "The preprocessing pipeline handles missing values, selects a 3,197-cadence segment, normalises flux, and applies Gaussian smoothing (σ=10)."),
         ("03", "🧠 Predict", "The trained 1D-CNN scores the segment [0,1]. Scores above <strong>0.6914</strong> trigger planet-candidate status. An EB rejection filter checks for secondary eclipses."),
     ]
     for col, (num, title, body) in zip([s1,s2,s3], steps):
@@ -740,7 +741,7 @@ elif page == "Detect":
 
     if model_err:
         st.error(f"⚠️ Model load failed: {model_err}")
-        st.info("Place `cnn_model_week6.keras` inside a `models/` folder at the app root.")
+        st.info("Check that the trained CNN model file is present inside the `models/` folder at the app root.")
         st.stop()
 
     # ── Input area ──
@@ -757,7 +758,7 @@ elif page == "Detect":
         demo_choice = st.selectbox(
             "Or pick a demo star",
             ["— select —"] + list(DEMO_STARS.keys()),
-            help="Pre-validated stars from the Week 7 sample set.",
+            help="Example targets for quickly testing the detection pipeline.",
         )
 
     if demo_choice != "— select —":
@@ -1168,329 +1169,109 @@ elif page == "Detect":
 # PAGE 3 — MODEL PERFORMANCE
 # ═════════════════════════════════════════════════════════════════
 elif page == "Performance":
+    APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
     st.markdown("""
     <h1 style='font-family:Orbitron,monospace; font-size:1.6rem; font-weight:900;
                color:#7ab3ff; letter-spacing:.1em; margin-bottom:.3rem;'>
-      📊 MODEL PERFORMANCE
+      📊 FINAL MODEL PERFORMANCE
     </h1>
     <div style='color:#4a6a8a; font-size:.85rem; margin-bottom:1.5rem;'>
-      All evaluation results across project weeks — real metrics, no cherry-picking.
+      Benchmark discrimination, real-world evaluation, calibrated operating point, and scientific limitations.
     </div>""", unsafe_allow_html=True)
 
-    # ── Weekly results table ──
-    st.markdown("""
-    <h3 style='font-family:Orbitron,monospace; font-size:.95rem; letter-spacing:.12em;
-               color:#4a80b0;'>WEEKLY RESULTS COMPARISON</h3>""", unsafe_allow_html=True)
-
-    table_data = {
-        "Week": ["Week 6", "Week 7", "Week 8", "Week 8 (EB filtered)", "Week 9A"],
-        "Dataset":    ["Competition test", "Wild Kepler stars", "Wild Kepler stars", "Wild Kepler stars", "Broader catalog"],
-        "AUC":        ["0.9628", "0.6933", "0.6933", "—", "—"],
-        "Precision":  ["—", "—", "1.000", "1.000", "—"],
-        "F1":         ["—", "—", "0.605", "0.605", "—"],
-        "High-SNR DR":["—", "93% (14/15)", "93%", "93%", "0%"],
-        "Low-SNR DR": ["—", "7% (1/15)", "7%", "7%", "0%"],
-        "FPR":        ["—", "28%", "28%", "0%", "—"],
-        "EB catch":   ["—", "—", "6/6 (100%)", "6/6 (100%)", "—"],
-        "Note":       ["Competition benchmark", "Baseline wild-data", "Before calibration", "After calibration", "Stellar variability limit"],
-    }
-    df = pd.DataFrame(table_data)
-
-    fig_tbl = go.Figure(data=[go.Table(
-        columnwidth=[60, 120, 60, 70, 60, 90, 90, 60, 80, 160],
-        header=dict(
-            values=[f"<b>{c}</b>" for c in df.columns],
-            fill_color="#0d2240",
-            font=dict(color="#7ab3ff", family="Orbitron", size=10),
-            align="center",
-            line_color="#163366",
-        ),
-        cells=dict(
-            values=[df[c] for c in df.columns],
-            fill_color=[["#060f1c", "#080e18"] * 10],
-            font=dict(color="#8aafd4", family="DM Sans", size=11),
-            align="center",
-            line_color="#0d2240",
-            height=28,
-        ),
-    )])
-    fig_tbl.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=0, r=0, t=10, b=10),
-        height=220,
-    )
-    st.plotly_chart(fig_tbl, use_container_width=True)
+    # Headline metrics are reported evaluation results, not generated sample data.
+    k1, k2, k3 = st.columns(3)
+    for col, label, value, note in [
+        (k1, "BENCHMARK ROC-AUC", "0.9628", "Competition test set"),
+        (k2, "WILD-DATA ROC-AUC", "0.6933", "Real-world Kepler evaluation"),
+        (k3, "DECISION THRESHOLD", "0.6914", "Configured operating point"),
+    ]:
+        with col:
+            st.markdown(f"""
+            <div class='metric-card'>
+              <div style='font-size:.68rem;color:#4a80b0;letter-spacing:.1em;margin-bottom:.5rem;'>{label}</div>
+              <div style='font-family:Orbitron,monospace;font-size:1.65rem;color:#7ab3ff;font-weight:900;'>{value}</div>
+              <div style='font-size:.75rem;color:#4a6a8a;margin-top:.35rem;'>{note}</div>
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-    colA, colB = st.columns(2)
-
-    # ── ROC Curve (synthetic from known AUC) ──
-    with colA:
-        st.markdown("""
-        <h3 style='font-family:Orbitron,monospace; font-size:.9rem; letter-spacing:.12em;
-                   color:#4a80b0;'>ROC CURVES</h3>""", unsafe_allow_html=True)
-
-        # Generate smooth ROC from AUC value using parametric curve
-        def roc_from_auc(auc, n=200, label=""):
-            fpr = np.linspace(0, 1, n)
-            # Use a beta-distribution shape scaled to hit AUC
-            alpha = auc / (1 - auc)
-            tpr = 1 - (1 - fpr) ** alpha
-            # Rough correction to match AUC via trapezoidal rule
-            return fpr, tpr
-
-        fig_roc = go.Figure()
-
-        for auc_val, color, name in [
-            (0.9628, "#2575fc", "Week 6 — Competition (AUC 0.9628)"),
-            (0.6933, "#9b59b6", "Week 7-8 — Wild data (AUC 0.6933)"),
-        ]:
-            fpr, tpr = roc_from_auc(auc_val)
-            fig_roc.add_trace(go.Scatter(
-                x=fpr, y=tpr, mode="lines", name=name,
-                line=dict(color=color, width=2),
-            ))
-
-        # diagonal
-        fig_roc.add_trace(go.Scatter(
-            x=[0,1], y=[0,1], mode="lines", name="Random",
-            line=dict(color="#2d4d6e", dash="dash", width=1),
-        ))
-        # threshold point
-        fig_roc.add_trace(go.Scatter(
-            x=[0.28], y=[0.93], mode="markers", name="Pre-cal threshold",
-            marker=dict(color="#e74c3c", size=10, symbol="circle"),
-        ))
-        fig_roc.add_trace(go.Scatter(
-            x=[0.0], y=[0.93], mode="markers", name="Post-cal threshold",
-            marker=dict(color="#2ecc71", size=10, symbol="star"),
-        ))
-
-        _roc_layout = {k: v for k, v in PLOT_LAYOUT.items() if k not in ("xaxis", "yaxis")}
-        fig_roc.update_layout(
-            **_roc_layout,
-            xaxis=dict(**PLOT_LAYOUT["xaxis"], title="False Positive Rate", range=[0, 1]),
-            yaxis=dict(**PLOT_LAYOUT["yaxis"], title="True Positive Rate", range=[0, 1]),
-            height=360,
-            legend=dict(orientation="v", x=0.55, y=0.15,
-                        bgcolor="rgba(0,0,0,0)", font=dict(size=10)),
-        )
-        st.plotly_chart(fig_roc, use_container_width=True)
-
-        roc_img = "results/week8/roc_wild.png"
-        if os.path.exists(roc_img):
-            st.image(roc_img, caption="Week 8 ROC (saved result)", use_container_width=True)
-
-    # ── Score Distribution ──
-    with colB:
-        st.markdown("""
-        <h3 style='font-family:Orbitron,monospace; font-size:.9rem; letter-spacing:.12em;
-                   color:#4a80b0;'>SCORE DISTRIBUTION</h3>""", unsafe_allow_html=True)
-
-        np.random.seed(42)
-        # Simulate score distributions matching known metrics
-        scores_planet = np.clip(np.random.beta(8, 1.5, 120), 0.01, 0.9999)
-        scores_nonplanet = np.clip(np.random.beta(1.2, 7, 200), 0.0001, 0.99)
-        scores_eb = np.clip(np.random.beta(6, 1.8, 30), 0.01, 0.9999)
-
-        fig_dist = go.Figure()
-        fig_dist.add_trace(go.Histogram(
-            x=scores_planet, name="Planet candidates",
-            marker_color="#2575fc", opacity=0.75, nbinsx=25,
-            xbins=dict(start=0, end=1, size=0.04),
-        ))
-        fig_dist.add_trace(go.Histogram(
-            x=scores_nonplanet, name="Non-planets / Variables",
-            marker_color="#9b59b6", opacity=0.75, nbinsx=25,
-            xbins=dict(start=0, end=1, size=0.04),
-        ))
-        fig_dist.add_trace(go.Histogram(
-            x=scores_eb, name="Eclipsing binaries",
-            marker_color="#e74c3c", opacity=0.75, nbinsx=25,
-            xbins=dict(start=0, end=1, size=0.04),
-        ))
-        fig_dist.add_vline(
-            x=THRESHOLD, line_dash="dash", line_color="#f5a623",
-            annotation_text=f"Threshold {THRESHOLD}",
-            annotation_font=dict(color="#f5a623", size=11),
-        )
-        fig_dist.update_layout(
-            **PLOT_LAYOUT,
-            barmode="overlay",
-            xaxis_title="CNN Score",
-            yaxis_title="Count",
-            height=360,
-            legend=dict(orientation="v", x=0.01, y=0.95,
-                        bgcolor="rgba(0,0,0,0)", font=dict(size=10)),
-        )
-        st.plotly_chart(fig_dist, use_container_width=True)
-
-    # ── SNR Tier Bar ──
     st.markdown("""
-    <h3 style='font-family:Orbitron,monospace; font-size:.9rem; letter-spacing:.12em;
-               color:#4a80b0;'>DETECTION RATE BY SNR TIER</h3>""", unsafe_allow_html=True)
+    <h3 style='font-family:Orbitron,monospace;font-size:.95rem;letter-spacing:.12em;color:#4a80b0;'>
+      PERFORMANCE AT A GLANCE
+    </h3>""", unsafe_allow_html=True)
 
-    snr_data = {
-        "SNR Tier": ["≥ 200 (High)", "50–200 (Medium)", "< 50 (Low)", "EB Stars"],
-        "Detection Rate (%)": [93, 45, 7, 0],
-        "FP Rate (%)": [0, 5, 0, 0],
-        "N Tested": [15, 12, 15, 6],
-        "Color": ["#2575fc", "#6a11cb", "#9b59b6", "#e74c3c"],
-    }
-    df_snr = pd.DataFrame(snr_data)
+    metric_left, metric_right = st.columns(2)
+    for col, rel_path, caption in [
+        (metric_left, "assets/performance_auc.png", "ROC-AUC across the benchmark and wild-data evaluations"),
+        (metric_right, "assets/calibrated_metrics.png", "Calibrated operating point: precision, recall, F1, and false-positive rate"),
+    ]:
+        image_path = os.path.join(APP_DIR, rel_path)
+        with col:
+            if os.path.isfile(image_path):
+                st.image(image_path, caption=caption, use_container_width=True)
+            else:
+                st.warning(f"Performance chart not found: {rel_path}")
 
-    fig_snr = go.Figure()
-    fig_snr.add_trace(go.Bar(
-        x=df_snr["SNR Tier"],
-        y=df_snr["Detection Rate (%)"],
-        name="True Positive Rate",
-        marker_color=df_snr["Color"].tolist(),
-        text=df_snr["Detection Rate (%)"].astype(str) + "%",
-        textposition="outside",
-        textfont=dict(color="#8aafd4", size=12),
-    ))
-    fig_snr.add_trace(go.Bar(
-        x=df_snr["SNR Tier"],
-        y=df_snr["FP Rate (%)"],
-        name="False Positive Rate",
-        marker_color=["rgba(245,166,35,0.6)"] * 4,
-        text=df_snr["FP Rate (%)"].astype(str) + "%",
-        textposition="outside",
-    ))
-    fig_snr.update_layout(
-        **PLOT_LAYOUT,
-        barmode="group",
-        yaxis_title="Rate (%)",
-        yaxis_range=[0, 115],
-        height=320,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                    bgcolor="rgba(0,0,0,0)"),
-    )
-    st.plotly_chart(fig_snr, use_container_width=True)
-
-    # ── Results Gallery — tabbed by week ──
     st.markdown("""
-    <h3 style='font-family:Orbitron,monospace; font-size:.9rem; letter-spacing:.12em;
-               color:#4a80b0; margin-top:1rem;'>RESULTS GALLERY</h3>""",
-    unsafe_allow_html=True)
+    <h3 style='font-family:Orbitron,monospace;font-size:.95rem;letter-spacing:.12em;color:#4a80b0;margin-top:1rem;'>
+      REPORTED OPERATING-POINT METRICS
+    </h3>""", unsafe_allow_html=True)
+    st.caption("The values below describe the reported calibrated evaluation sample (n=105). They should not be interpreted as universal performance on every Kepler target.")
 
-    # All images organised by week with captions
-    GALLERY = {
-        "Week 5": [
-            ("results/week5/roc_curve.png",          "ROC Curve — Week 5 baseline model"),
-            ("results/week5/auc_progression.png",    "AUC progression across training"),
-            ("results/week5/confusion_matrix.png",   "Confusion matrix — Week 5"),
-            ("results/week5/planet_scores.png",      "Planet score distributions"),
-            ("results/week5/planet_lightcurves.png", "Sample planet light curves"),
-        ],
-        "Week 6": [
-            ("results/week6/week6_summary.png",          "Week 6 model summary"),
-            ("results/week6/distribution_comparison.png","Score distribution comparison"),
-        ],
-        "Week 7": [
-            ("results/week7/week7_summary.png",          "Week 7 wild-data summary"),
-            ("results/week7/week7_final_analysis.png",   "Final analysis — 30 wild stars"),
-            ("results/week7/detection_results.png",      "Detection results overview"),
-            ("results/week7/score_distribution.png",     "Score distribution — wild data"),
-            ("results/week7/lightcurves_detected.png",   "Detected planet light curves"),
-            ("results/week7/lightcurves_missed.png",     "Missed planet light curves"),
-            ("results/week7/lightcurves_fp.png",         "False positive light curves"),
-            ("results/week7/missed_planet_analysis.png", "Missed planet analysis"),
-            ("results/week7/debug_preprocessing.png",    "Preprocessing debug plots"),
-        ],
-        "Week 8": [
-            ("results/week8/week8_summary.png",          "Week 8 calibration summary"),
-            ("results/week8/week8_final_summary.png",    "Week 8 final summary"),
-            ("results/week8/roc_wild.png",               "ROC curve — wild data"),
-            ("results/week8/pr_curve.png",               "Precision-recall curve"),
-            ("results/week8/threshold_sweep.png",        "Threshold sweep — calibration"),
-            ("results/week8/confidence_tiers.png",       "Confidence tier distribution"),
-            ("results/week8/eb_filter_results.png",      "EB filter results — 6/6 caught"),
-            ("results/week8/kic3335816_double_period.png","KIC 3335816 — 2P fold EB check"),
-        ],
-        "Week 9": [
-            ("results/week9/week9_summary.png",          "Week 9 broader catalog summary"),
-            ("results/week9/depth_vs_score.png",         "Transit depth vs CNN score"),
-            ("results/week9/waveform_comparison.png",    "Waveform comparison"),
-            ("results/week9/detrend_comparison.png",     "Detrending comparison"),
-            ("results/week9/lc_comparison.png",          "Light curve comparison"),
-            ("results/week9/debug_kic5357901.png",       "Debug: KIC 5357901 (Kepler-4b)"),
-        ],
-    }
+    metrics_df = pd.DataFrame([
+        {"Metric": "Precision", "Reported value": "1.000", "Interpretation": "No false positives at this evaluated operating point"},
+        {"Metric": "Recall", "Reported value": "0.433", "Interpretation": "Some positive examples were missed"},
+        {"Metric": "F1 score", "Reported value": "0.605", "Interpretation": "Balances precision and recall"},
+        {"Metric": "False-positive rate", "Reported value": "0.000", "Interpretation": "Observed on this evaluation sample and filter configuration"},
+        {"Metric": "Eclipsing-binary check", "Reported value": "6/6 flagged", "Interpretation": "Small tested sample; not a guarantee for all binaries"},
+    ])
+    st.dataframe(metrics_df, hide_index=True, use_container_width=True)
 
-    # Check which weeks have any images present
-    available_weeks = []
-    for week, imgs in GALLERY.items():
-        if any(os.path.exists(p) for p, _ in imgs):
-            available_weeks.append(week)
-
-    if not available_weeks:
-        st.markdown("""
-        <div class='info-box'>
-          📁 No result images found yet. Add your PNG files to
-          <code>results/week5/</code> through <code>results/week9/</code>
-          and they will appear here automatically in a tabbed gallery.
-        </div>""", unsafe_allow_html=True)
-    else:
-        tabs = st.tabs([f"📊 {w}" for w in available_weeks])
-        for tab, week in zip(tabs, available_weeks):
-            with tab:
-                imgs = [(p, c) for p, c in GALLERY[week] if os.path.exists(p)]
-                missing = [(p, c) for p, c in GALLERY[week] if not os.path.exists(p)]
-
-                # Week description banner
-                week_desc = {
-                    "Week 5": "Baseline CNN training — ROC, confusion matrix, score distributions.",
-                    "Week 6": "Final model (cnn_model_week6.keras) — AUC 0.9628 on competition test set.",
-                    "Week 7": "Wild-data evaluation — 30 real Kepler stars, 93% high-SNR detection, 28% FPR.",
-                    "Week 8": "Threshold calibration + EB filter — FPR→0%, Precision 1.0, 6/6 EBs caught.",
-                    "Week 9": "Broader catalog — stellar variability identified as primary detection limit.",
-                }
-                st.markdown(f"""
-                <div class='info-box' style='margin-bottom:1rem;'>
-                  📋 <strong>{week}</strong> — {week_desc.get(week,'')}
-                  &nbsp;|&nbsp; {len(imgs)} image{"s" if len(imgs)!=1 else ""} available
-                  {f" &nbsp;|&nbsp; {len(missing)} not found" if missing else ""}
-                </div>""", unsafe_allow_html=True)
-
-                # Render images in 2-column grid
-                if imgs:
-                    for row_start in range(0, len(imgs), 2):
-                        row_imgs = imgs[row_start:row_start+2]
-                        cols = st.columns(len(row_imgs))
-                        for col, (path, caption) in zip(cols, row_imgs):
-                            with col:
-                                st.image(path, caption=caption,
-                                         use_container_width=True)
-                                st.markdown(
-                                    f"<div style='font-size:.68rem; color:#2d4d6e; "
-                                    f"text-align:center; margin-top:.1rem;'>"
-                                    f"{os.path.basename(path)}</div>",
-                                    unsafe_allow_html=True)
-
-    # ── Known limitations ──
     st.markdown("""
-    <h3 style='font-family:Orbitron,monospace; font-size:.9rem; letter-spacing:.12em;
-               color:#4a80b0; margin-top:1.5rem;'>KNOWN LIMITATIONS</h3>""",
-    unsafe_allow_html=True)
+    <h3 style='font-family:Orbitron,monospace;font-size:.95rem;letter-spacing:.12em;color:#4a80b0;margin-top:1.25rem;'>
+      SCIENTIFIC VISUALIZATIONS
+    </h3>""", unsafe_allow_html=True)
+    st.caption("Selected examples from the evaluation assets. These are curated figures, not a chronological development gallery.")
 
-    limitations = [
-        ("High-SNR Hot Jupiters (SNR ≥ 200)", "93% detection", "✅"),
-        ("Low-SNR planets (SNR < 50)", "Only 7% detected — model trained on transit events visible above noise", "⚠️"),
-        ("Stellar variability", "Highly active stars score near zero regardless of planet presence", "⚠️"),
-        ("Equal-eclipse EBs", "Require 2P fold to detect — missed by standard 1P fold", "ℹ️"),
-        ("Non-standard transit shapes", "Kepler-13b (grazing/oblate) may score low due to shape mismatch", "ℹ️"),
-        ("Wild-data AUC drop", "AUC 0.9628 → 0.6933 in real-world testing — competition data is cleaner", "⚠️"),
+    visualizations = [
+        ("results/week8/pr_curve.png", "Precision-recall trade-off on wild-data evaluation"),
+        ("results/week8/eb_filter_results.png", "Eclipsing-binary filter evaluation"),
+        ("results/week9/waveform_comparison.png", "Raw and processed stellar light-curve examples"),
+        ("results/week9/lc_comparison.png", "Representative light-curve comparisons"),
     ]
-    for feat, detail, icon in limitations:
+    available_visualizations = []
+    for rel_path, caption in visualizations:
+        image_path = os.path.join(APP_DIR, rel_path)
+        if os.path.isfile(image_path):
+            available_visualizations.append((image_path, caption))
+
+    if available_visualizations:
+        for row_start in range(0, len(available_visualizations), 2):
+            cols = st.columns(2)
+            for col, (image_path, caption) in zip(cols, available_visualizations[row_start:row_start + 2]):
+                with col:
+                    st.image(image_path, caption=caption, use_container_width=True)
+    else:
+        st.info("Evaluation figures are not available in this deployment. Check that the assets and results folders are committed to GitHub.")
+
+    st.markdown("""
+    <h3 style='font-family:Orbitron,monospace;font-size:.95rem;letter-spacing:.12em;color:#4a80b0;margin-top:1.25rem;'>
+      LIMITATIONS AND INTERPRETATION
+    </h3>""", unsafe_allow_html=True)
+    limitations = [
+        ("Benchmark-to-real-data gap", "ROC-AUC decreases from 0.9628 on the competition test set to 0.6933 on wild Kepler data."),
+        ("Broader-catalog evaluation", "The saved evaluation reported 0% detection on a sample of 100 known planet hosts, showing that the current pipeline does not generalise reliably to that catalog."),
+        ("Low signal-to-noise transits", "Shallow or noisy transit signals can be missed by the current model."),
+        ("Stellar variability and instrumental effects", "Non-planetary changes in brightness can resemble or obscure transit signals."),
+        ("Eclipsing binaries", "The screening step flags the tested examples, but a small test set does not establish general reliability."),
+        ("Candidate scores are not confirmation", "A high CNN score is a screening result, not proof that an exoplanet exists. Independent follow-up is required."),
+    ]
+    for title, detail in limitations:
         st.markdown(f"""
-        <div style='display:flex; gap:1rem; align-items:baseline; padding:.5rem 0;
-                    border-bottom:1px solid #0a1929;'>
-          <span style='font-size:1.1rem; min-width:24px;'>{icon}</span>
-          <div>
-            <div style='font-size:.85rem; color:#8aafd4; font-weight:500;'>{feat}</div>
-            <div style='font-size:.77rem; color:#4a6a8a; margin-top:.15rem;'>{detail}</div>
-          </div>
+        <div style='padding:.65rem 0;border-bottom:1px solid #0a1929;'>
+          <div style='font-size:.85rem;color:#8aafd4;font-weight:600;'>{title}</div>
+          <div style='font-size:.77rem;color:#4a6a8a;margin-top:.2rem;line-height:1.6;'>{detail}</div>
         </div>""", unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════
