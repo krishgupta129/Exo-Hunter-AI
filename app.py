@@ -1280,7 +1280,7 @@ elif page == "Performance":
             cols = st.columns(2)
             for col, (image_path, caption) in zip(cols, available_visualizations[row_start:row_start + 2]):
                 with col:
-                    st.image(image_path, caption=caption, use_container_width=True)
+                    display_embedded_image(image_path, caption)
     else:
         st.info("Evaluation figures are not available in this deployment. Check that the assets and results folders are committed to GitHub.")
 
