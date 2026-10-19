@@ -1,6 +1,6 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║          EXO HUNTER AI  —  Streamlit Web App           ║
+║          ASTRAX'26  —  Streamlit Web App           ║
 ║          1D-CNN on Kepler Light Curves             ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
@@ -44,11 +44,34 @@ def display_embedded_image(image_path, caption=None):
         st.caption(caption)
 
 
+def display_astrax_logo(size=84):
+    """Render the compact Astrax'26 mark inline so it works on Streamlit Cloud."""
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "astrax_logo.png")
+    if not os.path.isfile(logo_path):
+        return
+
+    with open(logo_path, "rb") as logo_file:
+        encoded_logo = base64.b64encode(logo_file.read()).decode("ascii")
+
+    st.markdown(
+        f"""
+        <div style="display:flex; justify-content:center; align-items:center; margin:.25rem auto .65rem;">
+          <img src="data:image/png;base64,{encoded_logo}"
+               alt="Astrax'26 logo"
+               style="width:{int(size)}px; height:{int(size)}px; object-fit:cover;
+                      border:1px solid #12345a; border-radius:16px;
+                      box-shadow:0 0 22px rgba(37,117,252,.20);" />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 # ─────────────────────────────────────────────────────────────────
 # PAGE CONFIG  (must be first Streamlit call)
 # ─────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Exo Hunter AI | Exoplanet Transit Detection",
+    page_title="Astrax'26 | Exoplanet Transit Detection",
     page_icon="🪐",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -600,11 +623,12 @@ PLOT_LAYOUT = dict(
 # SIDEBAR NAVIGATION
 # ─────────────────────────────────────────────────────────────────
 with st.sidebar:
+    display_astrax_logo(76)
     st.markdown("""
-    <div style='text-align:center; padding:1.2rem 0 .5rem;'>
+    <div style='text-align:center; padding:.15rem 0 .5rem;'>
       <div style='font-family:Orbitron,monospace; font-size:1.1rem;
                   font-weight:900; color:#2575fc; letter-spacing:.12em;'>
-        🪐 EXO HUNTER AI
+        🪐 ASTRAX'26
       </div>
       <div style='font-size:.65rem; letter-spacing:.15em; color:#2d4d6e; margin-top:.3rem;'>
         KEPLER · 1D-CNN · TRANSIT DETECTION
@@ -644,7 +668,7 @@ if page == "Home":
       <h1 style='font-size:clamp(2rem,5vw,3.5rem); font-weight:900; margin:0;
                  background:linear-gradient(135deg,#ffffff,#7ab3ff,#6a11cb);
                  -webkit-background-clip:text; -webkit-text-fill-color:transparent;'>
-        EXO HUNTER AI
+        ASTRAX'26
       </h1>
       <div style='font-family:"DM Sans",sans-serif; font-size:1.1rem; color:#5a7fa8;
                   margin-top:1rem; max-width:640px; margin-left:auto; margin-right:auto;'>
@@ -1307,16 +1331,17 @@ elif page == "Performance":
 # PAGE 4 — ABOUT
 # ═════════════════════════════════════════════════════════════════
 elif page == "About":
+    display_astrax_logo(112)
     st.markdown("""
     <h1 style='font-family:Orbitron,monospace; font-size:1.6rem; font-weight:900;
                color:#7ab3ff; letter-spacing:.1em; margin-bottom:.3rem;'>
-      🪐 EXO HUNTER AI
+      🪐 ASTRAX'26
     </h1>
     <div style='color:#4a6a8a; font-size:.85rem; margin-bottom:1.5rem;'>
       Deep Learning for Exoplanet Transit Detection
     </div>
     <div class='info-box' style='font-size:.9rem; line-height:1.8;'>
-      Exo Hunter AI is an interactive astronomy and machine-learning project that
+      Astrax'26 is an interactive astronomy and machine-learning project that
       analyzes stellar light curves from NASA's Kepler mission to identify patterns
       that may resemble an exoplanet transit. It brings together astronomical data
       retrieval, time-series preprocessing, a trained 1D Convolutional Neural Network

@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🪐 Exo Hunter AI
+# 🪐 Astrax'26
 
-### Deep Learning for Exoplanet Transit Detection
+### AI-Powered Exoplanet Transit Detection
 
 **An interactive machine-learning project for analysing Kepler stellar light curves and ranking potential exoplanet transit signals.**
 
@@ -19,7 +19,7 @@
 
 ## Project overview
 
-Exo Hunter AI is a Streamlit application that uses a trained **1D Convolutional Neural Network (1D-CNN)** to analyse stellar brightness measurements, known as *light curves*. When a planet crosses in front of its host star, the observed brightness can dip in a transit-like pattern. The application preprocesses Kepler photometry, scores the resulting time series, and presents the result alongside supporting checks.
+Astrax'26 is a Streamlit application that uses a trained **1D Convolutional Neural Network (1D-CNN)** to analyse stellar brightness measurements, known as *light curves*. When a planet crosses in front of its host star, the observed brightness can dip in a transit-like pattern. The application preprocesses Kepler photometry, scores the resulting time series, and presents the result alongside supporting checks.
 
 The goal is to help explore and prioritise **candidate signals**. A model score is not proof that a planet exists, and every candidate requires scientific validation.
 
@@ -52,6 +52,10 @@ On the reported calibrated evaluation sample (**105 stars**), the saved results 
 ### Important limitation
 
 The broader-catalog evaluation reported **0% detection** on a sample of 100 known planet hosts. Stellar variability and the current preprocessing strategy can obscure transit signals, especially when the selected segment does not contain a clear transit. This is a material limitation and is included here rather than hidden behind the stronger benchmark score.
+
+## Project branding
+
+The compact Astrax'26 logo is derived from the supplied space artwork and is displayed in the Streamlit sidebar and About page. The image is stored at `assets/astrax_logo.png` and embedded as a data URI by the app so it does not depend on Streamlit's separate media-serving endpoint. Keep this asset in the repository when deploying.
 
 ## Technology stack
 
